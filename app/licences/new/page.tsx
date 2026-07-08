@@ -1,0 +1,116 @@
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+
+export default async function NewLicencePage() {
+  const supabase = await createClient()
+  const { data: authorities } = await supabase.from("authorities").select("id, name, abbreviation").order("name")
+  const { data: outlets } = await supabase.from("outlets").select("id, name, outlet_code").order("name")
+
+  async function createLicence(formData: FormData) {
+    "use server"
+    const supabase = await createClient()
+    const expiryDate = formData.get("expiry_date") as string
+    
+    const { data, error } = await supabase.from("licences").insert({
+      licence_name: formData.get("licence_name"),
+      licence_number: formData.get("licence_number") || null,
+      category: formData.get("category") || null,
+      authority_id: formData.get("authority_id") || null,
+      outlet_id: formData.get("outlet_id") || null,
+      assigned_to: formData.get("assigned_to") || null,
+      issue_date: formData.get("issue_date") || null,
+      expiry_date: expiryDate,
+      renewal_period_months: formData.get("renewal_period_months") ? Number(formData.get("renewal_period_months")) : null,
+      notes: formData.get("notes") || null,
+      status: "active",
+    }).select().single()
+
+    if (!error && data) {
+      await supabase.from("activities").insert({
+        actor: formData.get("assigned_to") || "Team",
+        action: "added licence",
+        object_type: "licence",
+        object_id: data.id,
+        object_label: `${data.licence_name}`,
+      })
+    }
+    redirect("/")
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</Link>
+          <span className="text-gray-300">/</span>
+          <h1 className="text-lg font-semibold text-gray-900">Add Licence</h1>
+        </div>
+      </header>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <form action={createLicence} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Licence Name <span className="text-red-500">*</span></label>
+              <input name="licence_name" required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Food Shop Licence" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Licence Number</label>
+              <input name="licence_number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. SFA-2024-OC-0001" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <input name="category" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Food Hygiene" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Authority</label>
+              <select name="authority_id" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">— Select authority —</option>
+                {(authorities ?? []).map((a: any) => (
+                  <option key={a.id} value={a.id}>{a.abbreviation ? `${a.abbreviation} — ` : ""}{a.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Outlet</label>
+              <select name="outlet_id" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">— Select outlet —</option>
+                {(outlets ?? []).map((o: any) => (
+                  <option key={o.id} value={o.id}>{o.outlet_code ? `${o.outlet_code} — ` : ""}{o.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
+              <input type="date" name="issue_date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date <span className="text-red-500">*</span></label>
+              <input type="date" name="expiry_date" required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+              <input name="assigned_to" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Priya Nair" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Renewal Period (months)</label>
+              <input type="number" name="renewal_period_months" min="1" max="120" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. 12" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea name="notes" rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Any additional notes…" />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+              Save Licence
+            </button>
+            <Link href="/" className="px-5 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
