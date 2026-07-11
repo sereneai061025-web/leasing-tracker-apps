@@ -39,32 +39,32 @@ export default async function FinancialPage() {
   const fmt = (n: number) => `SGD ${n.toLocaleString("en-SG", { minimumFractionDigits: 2 })}`
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Financial Dashboard</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Financial Dashboard</h1>
         <p className="text-gray-500 text-sm mt-1">Renewal cost analysis across all licences</p>
       </div>
 
       {/* Top cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Total Portfolio Cost</p>
-          <p className="text-3xl font-bold text-gray-900">{fmt(totalCost)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{fmt(totalCost)}</p>
           <p className="text-xs text-gray-400 mt-1">{licences.length} licences</p>
         </div>
         <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
           <p className="text-xs font-medium text-emerald-600 uppercase tracking-wide mb-2">Active Licences</p>
-          <p className="text-3xl font-bold text-emerald-700">{fmt(activeCost)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-emerald-700">{fmt(activeCost)}</p>
           <p className="text-xs text-emerald-500 mt-1">currently valid</p>
         </div>
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
           <p className="text-xs font-medium text-amber-600 uppercase tracking-wide mb-2">Renewal Action Required</p>
-          <p className="text-3xl font-bold text-amber-700">{fmt(urgentCost)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-amber-700">{fmt(urgentCost)}</p>
           <p className="text-xs text-amber-500 mt-1">expiring or expired</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* By Authority */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-5">Cost by Authority</h2>

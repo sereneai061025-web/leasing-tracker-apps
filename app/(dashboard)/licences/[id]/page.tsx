@@ -77,11 +77,11 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4">Licence Details</h2>
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
               <div><dt className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Number</dt><dd className="font-medium text-gray-900">{licence.licence_number ?? "—"}</dd></div>
               <div><dt className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Category</dt><dd className="text-gray-900">{licence.category ?? "—"}</dd></div>
               <div><dt className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Authority</dt><dd className="text-gray-900">{(licence as any).authorities?.name ?? "—"}</dd></div>

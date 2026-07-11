@@ -14,9 +14,9 @@ export default async function RenewalsPage() {
     .filter((l: any) => l.status === "expiring_soon")
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Renewals</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Renewals</h1>
         <p className="text-gray-500 text-sm mt-1">{licences.length} licence{licences.length !== 1 ? "s" : ""} expiring within 60 days</p>
       </div>
 
@@ -44,7 +44,7 @@ export default async function RenewalsPage() {
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className={`text-2xl font-bold ${text}`}>{days}d</p>
+                    <p className={`text-xl md:text-2xl font-bold ${text}`}>{days}d</p>
                     <p className="text-xs text-gray-400">{new Date(l.expiry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
                     {l.renewal_cost && <p className="text-xs text-gray-500 mt-0.5">SGD {Number(l.renewal_cost).toLocaleString("en-SG", { minimumFractionDigits: 2 })}</p>}
                   </div>

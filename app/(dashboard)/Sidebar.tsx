@@ -14,7 +14,7 @@ const nav = [
 export default function Sidebar({ user }: { user: { email: string } | null }) {
   const pathname = usePathname()
   return (
-    <aside className="w-56 shrink-0 bg-gray-900 min-h-screen flex flex-col">
+    <aside className="hidden md:flex w-56 shrink-0 bg-gray-900 min-h-screen flex-col">
       <div className="px-5 py-6 border-b border-gray-700">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-xs font-bold">LC</div>

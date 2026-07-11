@@ -84,9 +84,9 @@ export default async function CalendarPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Renewal Calendar</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Renewal Calendar</h1>
         <p className="text-gray-500 text-sm mt-1">90-day renewal timeline — click any licence to log an action</p>
       </div>
 

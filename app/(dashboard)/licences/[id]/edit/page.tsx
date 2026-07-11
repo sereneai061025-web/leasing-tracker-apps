@@ -41,7 +41,7 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center gap-3 mb-8 text-sm">
         <Link href="/licences" className="text-gray-400 hover:text-gray-600">All Licences</Link>
         <span className="text-gray-300">/</span>
@@ -50,9 +50,9 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
         <span className="text-gray-700 font-medium">Edit</span>
       </div>
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Licence</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Edit Licence</h1>
         <form action={updateLicence} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Licence Name <span className="text-red-500">*</span></label>
               <input name="licence_name" required defaultValue={licence.licence_name} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />

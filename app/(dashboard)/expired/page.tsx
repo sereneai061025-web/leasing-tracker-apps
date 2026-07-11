@@ -14,9 +14,9 @@ export default async function ExpiredPage() {
     .filter((l: any) => l.status === "expired")
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Expired Licences</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Expired Licences</h1>
         <p className="text-gray-500 text-sm mt-1">{licences.length} licence{licences.length !== 1 ? "s" : ""} require immediate action</p>
       </div>
 
@@ -26,7 +26,7 @@ export default async function ExpiredPage() {
           <p className="text-gray-500 font-medium">No expired licences</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-red-50 border-b border-red-100">
