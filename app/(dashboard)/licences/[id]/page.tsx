@@ -4,6 +4,8 @@ import { computeStatus, daysToExpiry, type RenewalLog } from "@/lib/types"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import DeleteLicenceButton from "./DeleteLicenceButton"
+import DocumentUpload from "./DocumentUpload"
+import AiDraftButton from "./AiDraftButton"
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
@@ -68,6 +70,7 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
                 className="px-3 py-1.5 bg-white border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-50 flex items-center gap-1">
                 📄 PDF
               </a>
+              <AiDraftButton licence={licence} />
             </>
           )}
           {canEdit(role) && <Link href={`/licences/${id}/edit`} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">Edit</Link>}
@@ -133,6 +136,10 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
           </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <DocumentUpload licenceId={id} documentUrl={licence.document_url} />
         </div>
 
         <div>

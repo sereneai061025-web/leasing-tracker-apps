@@ -86,8 +86,16 @@ export default async function CalendarPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Renewal Calendar</h1>
-        <p className="text-gray-500 text-sm mt-1">90-day renewal timeline — click any licence to log an action</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Renewal Calendar</h1>
+            <p className="text-gray-500 text-sm mt-1">90-day renewal timeline — click any licence to log an action</p>
+          </div>
+          <a href="/api/export/renewals-ics"
+            className="px-3 py-2 bg-white border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5">
+            📅 Export to Calendar
+          </a>
+        </div>
       </div>
 
       {licences.length === 0 ? (

@@ -35,8 +35,16 @@ export default async function UsersPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">User Management</h1>
-        <p className="text-gray-500 text-sm mt-1">Admin only — create and manage user accounts</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-500 text-sm mt-1">Admin only — create and manage user accounts</p>
+          </div>
+          <a href="/api/export/audit-csv"
+            className="px-3 py-2 bg-white border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+            ⬇ Audit Log
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
