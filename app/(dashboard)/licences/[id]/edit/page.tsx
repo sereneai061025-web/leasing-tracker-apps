@@ -6,6 +6,8 @@ import { computeStatus } from "@/lib/types"
 export default async function EditLicencePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
   const { data: licence } = await supabase.from("licences").select("*").eq("id", id).single()
   if (!licence) notFound()
   const { data: authorities } = await supabase.from("authorities").select("id, name, abbreviation").order("name")
@@ -14,6 +16,8 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
   async function updateLicence(formData: FormData) {
     "use server"
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect("/login")
     const expiryDate = formData.get("expiry_date") as string
     await supabase.from("licences").update({
       licence_name: formData.get("licence_name"),
@@ -30,11 +34,8 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
       status: computeStatus(expiryDate),
     }).eq("id", id)
     await supabase.from("activities").insert({
-      actor: formData.get("assigned_to") || "Team",
-      action: "updated licence details",
-      object_type: "licence",
-      object_id: id,
-      object_label: formData.get("licence_name") as string,
+      actor: user.email || "Team", action: "updated licence details",
+      object_type: "licence", object_id: id, object_label: formData.get("licence_name") as string,
     })
     redirect(`/licences/${id}`)
   }
@@ -68,18 +69,14 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Authority</label>
               <select name="authority_id" defaultValue={licence.authority_id ?? ""} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Select —</option>
-                {(authorities ?? []).map((a: any) => (
-                  <option key={a.id} value={a.id}>{a.abbreviation ? `${a.abbreviation} — ` : ""}{a.name}</option>
-                ))}
+                {(authorities ?? []).map((a: any) => <option key={a.id} value={a.id}>{a.abbreviation ? `${a.abbreviation} — ` : ""}{a.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Outlet</label>
               <select name="outlet_id" defaultValue={licence.outlet_id ?? ""} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Select —</option>
-                {(outlets ?? []).map((o: any) => (
-                  <option key={o.id} value={o.id}>{o.outlet_code ? `${o.outlet_code} — ` : ""}{o.name}</option>
-                ))}
+                {(outlets ?? []).map((o: any) => <option key={o.id} value={o.id}>{o.outlet_code ? `${o.outlet_code} — ` : ""}{o.name}</option>)}
               </select>
             </div>
             <div>

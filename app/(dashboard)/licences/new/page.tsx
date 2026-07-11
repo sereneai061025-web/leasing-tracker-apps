@@ -4,12 +4,17 @@ import Link from "next/link"
 
 export default async function NewLicencePage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
+
   const { data: authorities } = await supabase.from("authorities").select("id, name, abbreviation").order("name")
   const { data: outlets } = await supabase.from("outlets").select("id, name, outlet_code").order("name")
 
   async function createLicence(formData: FormData) {
     "use server"
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect("/login")
     const expiryDate = formData.get("expiry_date") as string
     const { data, error } = await supabase.from("licences").insert({
       licence_name: formData.get("licence_name"),
@@ -27,11 +32,8 @@ export default async function NewLicencePage() {
     }).select().single()
     if (!error && data) {
       await supabase.from("activities").insert({
-        actor: formData.get("assigned_to") || "Team",
-        action: "added new licence",
-        object_type: "licence",
-        object_id: data.id,
-        object_label: data.licence_name,
+        actor: user.email || "Team", action: "added new licence",
+        object_type: "licence", object_id: data.id, object_label: data.licence_name,
       })
     }
     redirect("/licences")
@@ -44,7 +46,6 @@ export default async function NewLicencePage() {
         <span className="text-gray-300">/</span>
         <span className="text-gray-700 font-medium">Add Licence</span>
       </div>
-
       <div className="max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Add New Licence</h1>
         <form action={createLicence} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
@@ -55,7 +56,7 @@ export default async function NewLicencePage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Licence Number</label>
-              <input name="licence_number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. SFA-2024-OC-0001" />
+              <input name="licence_number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Category</label>
@@ -65,18 +66,14 @@ export default async function NewLicencePage() {
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Authority</label>
               <select name="authority_id" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Select —</option>
-                {(authorities ?? []).map((a: any) => (
-                  <option key={a.id} value={a.id}>{a.abbreviation ? `${a.abbreviation} — ` : ""}{a.name}</option>
-                ))}
+                {(authorities ?? []).map((a: any) => <option key={a.id} value={a.id}>{a.abbreviation ? `${a.abbreviation} — ` : ""}{a.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Outlet</label>
               <select name="outlet_id" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Select —</option>
-                {(outlets ?? []).map((o: any) => (
-                  <option key={o.id} value={o.id}>{o.outlet_code ? `${o.outlet_code} — ` : ""}{o.name}</option>
-                ))}
+                {(outlets ?? []).map((o: any) => <option key={o.id} value={o.id}>{o.outlet_code ? `${o.outlet_code} — ` : ""}{o.name}</option>)}
               </select>
             </div>
             <div>
