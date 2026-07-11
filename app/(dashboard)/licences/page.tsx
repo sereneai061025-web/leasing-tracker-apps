@@ -23,9 +23,10 @@ export default async function AllLicencesPage() {
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">All Licences</h1>
           <p className="text-gray-500 text-sm mt-1">{licences.length} licence{licences.length !== 1 ? "s" : ""} total</p>
         </div>
-        <Link href="/licences/new" className="px-3 py-2 md:px-4 md:py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-          + Add
-        </Link>
+        <div className="flex gap-2">
+          <a href="/api/export/licences-csv" className="px-3 py-2 bg-white border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">⬇ CSV</a>
+          <Link href="/licences/new" className="px-3 py-2 md:px-4 md:py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">+ Add</Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

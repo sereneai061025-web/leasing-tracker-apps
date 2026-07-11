@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentRole, canEdit, canDelete, canLogRenewal } from "@/lib/role"
 import { computeStatus, daysToExpiry, type RenewalLog } from "@/lib/types"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
@@ -16,21 +17,21 @@ function StatusBadge({ status }: { status: string }) {
 export default async function LicenceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const [{ data: licence }, { data: { user } }] = await Promise.all([
+  const [{ data: licence }, { role, email }] = await Promise.all([
     supabase.from("licences").select("*, authorities(name,abbreviation,website), outlets(name,outlet_code,address)").eq("id", id).single(),
-    supabase.auth.getUser(),
+    getCurrentRole(),
   ])
   if (!licence) notFound()
   const { data: renewalLogs } = await supabase.from("renewal_logs").select("*").eq("licence_id", id).order("action_date", { ascending: false })
+
   const status = computeStatus(licence.expiry_date)
   const days = daysToExpiry(licence.expiry_date)
-  const isLoggedIn = !!user
 
   async function logRenewal(formData: FormData) {
     "use server"
+    const { role, email } = await getCurrentRole()
+    if (!canLogRenewal(role)) redirect("/login")
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect("/login")
     const newExpiry = formData.get("new_expiry_date") as string | null
     const actionType = formData.get("action_type") as string
     const actionedBy = formData.get("actioned_by") as string
@@ -40,32 +41,38 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
       notes: formData.get("notes") || null, new_expiry_date: newExpiry || null,
       new_licence_number: formData.get("new_licence_number") || null,
     })
-    if (newExpiry) {
-      await supabase.from("licences").update({ expiry_date: newExpiry, status: computeStatus(newExpiry) }).eq("id", id)
-    }
+    if (newExpiry) await supabase.from("licences").update({ expiry_date: newExpiry, status: computeStatus(newExpiry) }).eq("id", id)
     await supabase.from("activities").insert({
-      actor: actionedBy || user.email || "Team", action: `logged ${actionType.toLowerCase()} on licence`,
+      actor: actionedBy || email || "Team", action: `logged ${actionType.toLowerCase()} on licence`,
       object_type: "licence", object_id: id, object_label: licence.licence_name,
     })
     redirect(`/licences/${id}`)
   }
 
   const today = new Date().toISOString().split("T")[0]
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2 text-sm flex-wrap">
           <Link href="/licences" className="text-gray-400 hover:text-gray-600">All Licences</Link>
           <span className="text-gray-300">/</span>
           <span className="text-gray-700 font-medium">{licence.licence_name}</span>
           <StatusBadge status={status} />
         </div>
-        {isLoggedIn && (
-          <div className="flex gap-2">
-            <Link href={`/licences/${id}/edit`} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">Edit</Link>
-            <DeleteLicenceButton licenceId={id} licenceName={licence.licence_name} />
-          </div>
-        )}
+        <div className="flex gap-2 flex-wrap">
+          {/* Export buttons — available to all logged-in users */}
+          {role && (
+            <>
+              <a href={`/api/export/licence-pdf/${id}`} target="_blank"
+                className="px-3 py-1.5 bg-white border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                📄 PDF
+              </a>
+            </>
+          )}
+          {canEdit(role) && <Link href={`/licences/${id}/edit`} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">Edit</Link>}
+          {canDelete(role) && <DeleteLicenceButton licenceId={id} licenceName={licence.licence_name} />}
+        </div>
       </div>
 
       {(status === "expiring_soon" || status === "expired") && (
@@ -113,7 +120,7 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
                       {(log.actioned_by ?? "?")[0].toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700">{log.action_type}</span>
                         <span className="text-sm text-gray-600">by <span className="font-medium">{log.actioned_by ?? "—"}</span></span>
                         <span className="text-xs text-gray-300 ml-auto">{new Date(log.action_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
@@ -129,7 +136,7 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <div>
-          {isLoggedIn ? (
+          {canLogRenewal(role) ? (
             <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-6">
               <h2 className="font-semibold text-gray-900 mb-4">Log Renewal Action</h2>
               <form action={logRenewal} className="space-y-4">
@@ -137,16 +144,13 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
                   <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">Action Type <span className="text-red-500">*</span></label>
                   <select name="action_type" required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">— Select —</option>
-                    <option>Renewal Submitted</option>
-                    <option>Chased Authority</option>
-                    <option>Approved</option>
-                    <option>Renewed</option>
-                    <option>Escalated</option>
+                    <option>Renewal Submitted</option><option>Chased Authority</option>
+                    <option>Approved</option><option>Renewed</option><option>Escalated</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">Actioned By</label>
-                  <input name="actioned_by" defaultValue={licence.assigned_to ?? ""} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Your name" />
+                  <input name="actioned_by" defaultValue={licence.assigned_to ?? ""} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">Date</label>
@@ -157,7 +161,7 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
                   <textarea name="notes" rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Reference numbers, follow-up…" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">New Expiry Date <span className="text-gray-400">(if renewed)</span></label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">New Expiry Date</label>
                   <input type="date" name="new_expiry_date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
                 <div>
@@ -171,7 +175,7 @@ export default async function LicenceDetailPage({ params }: { params: Promise<{ 
             <div className="bg-white rounded-xl border border-gray-200 p-6 text-center sticky top-6">
               <div className="text-4xl mb-3">🔒</div>
               <h3 className="font-semibold text-gray-900 mb-2">Sign in to take action</h3>
-              <p className="text-sm text-gray-500 mb-5">Login required to log renewals, edit or delete licences.</p>
+              <p className="text-sm text-gray-500 mb-5">Login required to log renewals or edit licences.</p>
               <Link href="/login" className="block w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">Sign In</Link>
             </div>
           )}
